@@ -6,56 +6,56 @@
 #include <ctype.h>
 #include <conio.h>
 
-#include "head/Calendar.h"
-#include "head/LunarCalendar.h"
+#include "../head/Calendar.h"
+#include "../head/LunarCalendar.h"
 
-#define CHAR_SIZE			20			// ×Ö·û´®Êı×éµÄ³¤¶È
+#define CHAR_SIZE			20			// å­—ç¬¦ä¸²æ•°ç»„çš„é•¿åº¦
 #define BACKGROUND_COLOR	FOREGROUND_INTENSITY | BACKGROUND_INTENSITY | BACKGROUND_RED | BACKGROUND_GREEN | BACKGROUND_BLUE 
-static char date[CHAR_SIZE];			// ½ÓÊÜÊäÈëµÄÄê¡¢ÔÂ¡¢ÈÕ
+static char date[CHAR_SIZE];			// æ¥å—è¾“å…¥çš„å¹´ã€æœˆã€æ—¥
 
-/* ========================º¯Êı¶¨Òå======================== */
+/* ========================å‡½æ•°å®šä¹‰======================== */
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-// »ñÈ¡µ±Ç°ÏµÍ³Ê±¼ä
+// è·å–å½“å‰ç³»ç»Ÿæ—¶é—´
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 inline static struct tm GetCurrentDate()
 {	
 	time_t now = 0;
 	struct tm* tm_now;
 	time(&now);
-	tm_now = gmtime(&now);		// »ñÈ¡µ±Ç°ÏµÍ³Ê±¼ä
-	tm_now->tm_year += 1900;	// ÉèÖÃ³ÉÕıÈ·µÄÄê·İ
-	tm_now->tm_mon += 1;		// ÉèÖÃ³ÉÕıÈ·µÄÔÂ·İ
+	tm_now = gmtime(&now);		// è·å–å½“å‰ç³»ç»Ÿæ—¶é—´
+	tm_now->tm_year += 1900;	// è®¾ç½®æˆæ­£ç¡®çš„å¹´ä»½
+	tm_now->tm_mon += 1;		// è®¾ç½®æˆæ­£ç¡®çš„æœˆä»½
 	return *tm_now;
 }
 
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-// ÅĞ¶ÏÊÇ·ñÊÇÈòÄê²¢ÉèÖÃÏàÓ¦µÄÌìÊı 
+// åˆ¤æ–­æ˜¯å¦æ˜¯é—°å¹´å¹¶è®¾ç½®ç›¸åº”çš„å¤©æ•° 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 inline static void SetLeapYearsOfDays(int year)
 {
 	if ((year % 4 == 0) && (year % 100 != 0) || (year % 400 == 0))		
-		solarMonth[1] = 29;	// ÈòÄê2ÔÂ·İÓĞ29Ìì
+		solarMonth[1] = 29;	// é—°å¹´2æœˆä»½æœ‰29å¤©
 	else
-		solarMonth[1] = 28;	// Æ½Äê2ÔÂ·İÓĞ28Ìì
+		solarMonth[1] = 28;	// å¹³å¹´2æœˆä»½æœ‰28å¤©
 }
 
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-// ¼ÆËã¸ÃÄêÀë1900Äê1ÔÂ1ºÅ¶àÉÙÌì  
+// è®¡ç®—è¯¥å¹´ç¦»1900å¹´1æœˆ1å·å¤šå°‘å¤©  
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 inline static int CalcFromStartDays(int year, int month)
 {
 	int i, sum = 0;
-	/* ¼ÆËãÄê·İµÄÌìÊı, ÈòÄê¼Ó366Ìì,Æ½Äê¼Ó365Ìì */
+	/* è®¡ç®—å¹´ä»½çš„å¤©æ•°, é—°å¹´åŠ 366å¤©,å¹³å¹´åŠ 365å¤© */
 	for (i = 1900; i < year; i++)
 	{
 		if ((i % 4 == 0) && (i % 100 != 0) || (i % 400 == 0))
-			sum += 366;		// ÈòÄê¼Ó366Ìì
+			sum += 366;		// é—°å¹´åŠ 366å¤©
 		else
-			sum += 365;		// Æ½Äê¼Ó365Ìì
+			sum += 365;		// å¹³å¹´åŠ 365å¤©
 	}
-	/* ¼ÆËãÔÂ·İµÄÌìÊı */
+	/* è®¡ç®—æœˆä»½çš„å¤©æ•° */
 	for (i = 0; i < month - 1; i++)
 		sum += solarMonth[i];
 
@@ -64,17 +64,17 @@ inline static int CalcFromStartDays(int year, int month)
 
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-// ÅĞ¶Ï½ñÌìÊÇ·ñÊÇ½Ú¼ÙÈÕ,½øĞĞÔÂ·İºÍÈÕÆÚ±È½Ï
+// åˆ¤æ–­ä»Šå¤©æ˜¯å¦æ˜¯èŠ‚å‡æ—¥,è¿›è¡Œæœˆä»½å’Œæ—¥æœŸæ¯”è¾ƒ
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 inline static char* IsSameMonth(Holiday *hly_temp, int month, int day)
 {
 	char temp1[2], temp2[2];
 	for (int i = 0; i < HOLIDAYSIZE; i++)
 	{
-		/* »ñÈ¡½Ú¼ÙÈÕµÄÔÂ·İ */
+		/* è·å–èŠ‚å‡æ—¥çš„æœˆä»½ */
 		temp1[0] = hly_temp[i].date[0];
 		temp1[1] = hly_temp[i].date[1];
-		/* »ñÈ¡½Ú¼ÙÈÕµÄÈÕÆÚÊÇÄÄÒ»Ìì */
+		/* è·å–èŠ‚å‡æ—¥çš„æ—¥æœŸæ˜¯å“ªä¸€å¤© */
 		temp2[0] = hly_temp[i].date[2];
 		temp2[1] = hly_temp[i].date[3];
 		if (atoi(temp1) == month && atoi(temp2) == day)
@@ -85,7 +85,7 @@ inline static char* IsSameMonth(Holiday *hly_temp, int month, int day)
 
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-// ¸ßÁÁÏÔÊ¾Ë«ĞİÈÕ 
+// é«˜äº®æ˜¾ç¤ºåŒä¼‘æ—¥ 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 void ShowHiglightWeekend(int year, int month, int day)
 {
@@ -96,81 +96,81 @@ void ShowHiglightWeekend(int year, int month, int day)
 	}
 	int week = (day + 2 * month + 3 * (month + 1) / 5 + year + year / 4 - year / 100 + year / 400) % 7 + 1;
 	if (week == 6 || week == 7)
-		/* ÉèÖÃ×ÖÌåÑÕÉ«Îªµ­À¶É« */
+		/* è®¾ç½®å­—ä½“é¢œè‰²ä¸ºæ·¡è“è‰² */
 		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), BACKGROUND_COLOR | FOREGROUND_BLUE | FOREGROUND_GREEN);
 }
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-// »ñÈ¡¸ÃÔÂµÄ½ÚÆøÈÕÆÚ
+// è·å–è¯¥æœˆçš„èŠ‚æ°”æ—¥æœŸ
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 int* GetSolarTermsDate(int year, int month)
 {
-	int index = 0;			// Êı×éÏÂ±ê
+	int index = 0;			// æ•°ç»„ä¸‹æ ‡
 	int temp = 0;
 	char tempArr1[1];
 	char tempArr2[2];
 	int* date = (int*)malloc(sizeof(int) * 2);
-	char* solar_terms = solarTerms[year - 1900];	// »ñÈ¡¸ÃÄêµÄ½ÚÆøĞÅÏ¢
-	char solar_terms_month[7] = "";					// ´æ´¢Á½¸öÔÂ·İµÄ½ÚÆøĞÅÏ¢
+	char* solar_terms = solarTerms[year - 1900];	// è·å–è¯¥å¹´çš„èŠ‚æ°”ä¿¡æ¯
+	char solar_terms_month[7] = "";					// å­˜å‚¨ä¸¤ä¸ªæœˆä»½çš„èŠ‚æ°”ä¿¡æ¯
 	// 97783		7f0e3		7f149		98082		b0787		b0721	7f07e 7f0e4 7f531 b0723 b0b6fb0721
 	// 620419	   520419	   520521	   622722	   722823	   722721
-	// 1ÔÂ2ÔÂ	   3ÔÂ4ÔÂ	   5ÔÂ6ÔÂ      7ÔÂ8ÔÂ      9ÔÂ10ÔÂ     11ÔÂ12ÔÂ
-//ÏÂ±ê:  0		     5           10          15           20		  25 
-	/* ÉèÖÃÊı×éµÄÏÂ±ê */
-	if (month == 1 || month == 2)					// Èç¹ûÊÇ1ÔÂ¡¢2ÔÂ·İ£¬ÏÂ±êÉèÖÃÎª0
+	// 1æœˆ2æœˆ	   3æœˆ4æœˆ	   5æœˆ6æœˆ      7æœˆ8æœˆ      9æœˆ10æœˆ     11æœˆ12æœˆ
+//ä¸‹æ ‡:  0		     5           10          15           20		  25 
+	/* è®¾ç½®æ•°ç»„çš„ä¸‹æ ‡ */
+	if (month == 1 || month == 2)					// å¦‚æœæ˜¯1æœˆã€2æœˆä»½ï¼Œä¸‹æ ‡è®¾ç½®ä¸º0
 		index = 0;
 	else
 	{
-		/* Èç¹ûÔÂ·İÊÇÅ¼Êı, Ôò½«µ±ÔÂºÍÉÏÔÂµÄÔÂºÅÏà¼ÓÆğÀ´ */
+		/* å¦‚æœæœˆä»½æ˜¯å¶æ•°, åˆ™å°†å½“æœˆå’Œä¸Šæœˆçš„æœˆå·ç›¸åŠ èµ·æ¥ */
 		if (month / 2 == 0)
 			index = month + (month - 1) + 2;
-		/* Èç¹ûÊÇÆæÊı, Ôò½«µ±ÔÂºÍÏÂÒ»¸öÔÂµÄÔÂºÅÏà¼ÓÆğÀ´*/
+		/* å¦‚æœæ˜¯å¥‡æ•°, åˆ™å°†å½“æœˆå’Œä¸‹ä¸€ä¸ªæœˆçš„æœˆå·ç›¸åŠ èµ·æ¥*/
 		else
 			index = month + (month + 1) + 2;
-		/* »ñµÃ¸ÃÔÂ·İÔÚÊı×éÖĞµÄÏÂ±ê */
+		/* è·å¾—è¯¥æœˆä»½åœ¨æ•°ç»„ä¸­çš„ä¸‹æ ‡ */
 		index = index / 5 * 5;
 	}
-	/* »ñµÃµ±Ç°ÔÂ·İµÄ½ÚÆøĞÅÏ¢,´æ·Åµ½solar_terms_monthÖĞ */
+	/* è·å¾—å½“å‰æœˆä»½çš„èŠ‚æ°”ä¿¡æ¯,å­˜æ”¾åˆ°solar_terms_monthä¸­ */
 	strncpy(solar_terms_month, solar_terms + index, 5);
-	/* ½«Ê®Áù½ø×Ö·û´®×ª»»ÎªÊ®½øÖÆ×Ö·û´® */
+	/* å°†åå…­è¿›å­—ç¬¦ä¸²è½¬æ¢ä¸ºåè¿›åˆ¶å­—ç¬¦ä¸² */
 	sscanf(solar_terms_month, "%x", &temp);
 	sprintf(solar_terms_month, "%d", temp);
 	
-	/* ·µ»ØÆæÊıÔÂµÄ½ÚÆøÈÕÆÚ */
+	/* è¿”å›å¥‡æ•°æœˆçš„èŠ‚æ°”æ—¥æœŸ */
 	if ((month % 2) != 0)							
 	{
 		tempArr1[0] = solar_terms_month[0];
-		date[0] = atoi(tempArr1);					// µÚÒ»¸ö½ÚÆøÈÕÆÚ
+		date[0] = atoi(tempArr1);					// ç¬¬ä¸€ä¸ªèŠ‚æ°”æ—¥æœŸ
 		tempArr2[0] = solar_terms_month[1];
 		tempArr2[1] = solar_terms_month[2];
-		date[1] = atoi(tempArr2);					// µÚ¶ş¸ö½ÚÆøÈÕÆÚ
+		date[1] = atoi(tempArr2);					// ç¬¬äºŒä¸ªèŠ‚æ°”æ—¥æœŸ
 	}
-	/* ·µ»ØÅ¼ÊıÔÂµÄ½ÚÆøÈÕÆÚ */
+	/* è¿”å›å¶æ•°æœˆçš„èŠ‚æ°”æ—¥æœŸ */
 	else
 	{
 		tempArr1[0] = solar_terms_month[3];
-		date[0] = atoi(tempArr1);					// µÚÒ»¸ö½ÚÆøÈÕÆÚ
+		date[0] = atoi(tempArr1);					// ç¬¬ä¸€ä¸ªèŠ‚æ°”æ—¥æœŸ
 		tempArr2[0] = solar_terms_month[4];
 		tempArr2[1] = solar_terms_month[5];
-		date[1] = atoi(tempArr2);					// µÚ¶ş¸ö½ÚÆøÈÕÆÚ
+		date[1] = atoi(tempArr2);					// ç¬¬äºŒä¸ªèŠ‚æ°”æ—¥æœŸ
 	}
 	return date;
 }
 
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-// ÏÔÊ¾½ÚÆø
+// æ˜¾ç¤ºèŠ‚æ°”
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 char* ShowSolarTerms(int year, int month, int day)
 {
 	int* date = GetSolarTermsDate(year, month);
-	/* ·µ»Ø¸ÃÔÂµÚÒ»¸ö½ÚÆøµÄÃû³Æ */
+	/* è¿”å›è¯¥æœˆç¬¬ä¸€ä¸ªèŠ‚æ°”çš„åç§° */
 	if (day == date[0])								
 	{
 		free(date);
 		return solarTermsName[(month - 1) * 2];
 	}
-	/* ·µ»Ø¸ÃÔÂµÚ¶ş¸ö½ÚÆøµÄÃû³Æ */
+	/* è¿”å›è¯¥æœˆç¬¬äºŒä¸ªèŠ‚æ°”çš„åç§° */
 	if (day == date[1])								
 	{
 		free(date);
@@ -181,7 +181,7 @@ char* ShowSolarTerms(int year, int month, int day)
 
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-// ÏÔÊ¾½Ú¼ÙÈÕ 
+// æ˜¾ç¤ºèŠ‚å‡æ—¥ 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 char *ShowHolidays(int year, int month, int day)
 {
@@ -189,55 +189,55 @@ char *ShowHolidays(int year, int month, int day)
 	char temp1[2], temp2[2];
 	char* result = NULL;
 	Holiday *hly_temp;
-	if (year < STARTHOLIADY || year > ENDHOLIDAY)	// Ö»Ö§³Ö2008Äêµ½2021Äê
+	if (year < STARTHOLIADY || year > ENDHOLIDAY)	// åªæ”¯æŒ2008å¹´åˆ°2021å¹´
 		return NULL;
-	char **holidays = holidays3[year - 2008];		// »ñÈ¡¸ÃÄêµÄ½Ú¼ÙÈÕĞÅÏ¢
+	char **holidays = holidays3[year - 2008];		// è·å–è¯¥å¹´çš„èŠ‚å‡æ—¥ä¿¡æ¯
 
 //***********************************************************************************************
-// ½ñÌìÊÇ·ñÊÇÅ©Àú²»¹Ì¶¨ÈÕÆÚµÄ½Ú¼ÙÈÕ,±ÈÈç´º½Ú¡¢¶ËÎç½Ú¡¢ÖĞÇï½ÚÕâÖÖ
+// ä»Šå¤©æ˜¯å¦æ˜¯å†œå†ä¸å›ºå®šæ—¥æœŸçš„èŠ‚å‡æ—¥,æ¯”å¦‚æ˜¥èŠ‚ã€ç«¯åˆèŠ‚ã€ä¸­ç§‹èŠ‚è¿™ç§
 //***********************************************************************************************
-	hly_temp = holidays2[year - STARTHOLIADY];		// »ñÈ¡¸ÃÄêµÄËùÓĞ½Ú¼ÙÈÕĞÅÏ¢
+	hly_temp = holidays2[year - STARTHOLIADY];		// è·å–è¯¥å¹´çš„æ‰€æœ‰èŠ‚å‡æ—¥ä¿¡æ¯
 	result = IsSameMonth(hly_temp, month, day);
 	if (result != NULL)
 	{
-		/* ÉèÖÃ×ÖÌåÑÕÉ«ÎªºìÉ« */
+		/* è®¾ç½®å­—ä½“é¢œè‰²ä¸ºçº¢è‰² */
 		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), BACKGROUND_COLOR | FOREGROUND_RED);
 		return result;
 	}
 	
 //***********************************************************************************************
-// ½ñÌìÊÇ·ñÊÇÒ»¸ö½ÚÈÕÊÇµÄ»°·µ»Ø½ÚÈÕÃû³Æ
+// ä»Šå¤©æ˜¯å¦æ˜¯ä¸€ä¸ªèŠ‚æ—¥æ˜¯çš„è¯è¿”å›èŠ‚æ—¥åç§°
 //***********************************************************************************************
-	hly_temp = holidays1[month - 1];				// »ñÈ¡¸ÃÔÂµÄËùÓĞ½Ú¼ÙÈÕĞÅÏ¢
+	hly_temp = holidays1[month - 1];				// è·å–è¯¥æœˆçš„æ‰€æœ‰èŠ‚å‡æ—¥ä¿¡æ¯
 	result = IsSameMonth(hly_temp, month, day);
 	if (result != NULL)
 	{
-		/* ÉèÖÃ×ÖÌåÑÕÉ«ÎªºìÉ« */
+		/* è®¾ç½®å­—ä½“é¢œè‰²ä¸ºçº¢è‰² */
 		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), BACKGROUND_COLOR | FOREGROUND_RED);
 		return result;
 	}
 
 //***********************************************************************************************
-// ÅĞ¶Ï½ñÌìÊÇ·ñÊÇ½Ú¼ÙÈÕÖĞµÄÄ³Ò»Ìì
+// åˆ¤æ–­ä»Šå¤©æ˜¯å¦æ˜¯èŠ‚å‡æ—¥ä¸­çš„æŸä¸€å¤©
 //***********************************************************************************************
 
 	for (i = 0; i < 7; i++)
 	{
 		temp1[0] = holidays[i][4];
 		temp1[1] = holidays[i][5];
-		if (month == atoi(temp1))					// ÅĞ¶Ïµ±Ç°ÔÂ·İÊÇ·ñÓĞ½Ú¼ÙÈÕ
+		if (month == atoi(temp1))					// åˆ¤æ–­å½“å‰æœˆä»½æ˜¯å¦æœ‰èŠ‚å‡æ—¥
 		{
-			result = holidays[i];					// »ñÈ¡¸ÃÔÂ¾ßÌå½Ú¼ÙÈÕÈÕÆÚ
-			/* »ñÈ¡¸Ã½Ú¼ÙÈÕµÄÆğÊ¼ÈÕÆÚ */
+			result = holidays[i];					// è·å–è¯¥æœˆå…·ä½“èŠ‚å‡æ—¥æ—¥æœŸ
+			/* è·å–è¯¥èŠ‚å‡æ—¥çš„èµ·å§‹æ—¥æœŸ */
 			temp1[0] = result[6];
 			temp1[1] = result[7];
-			/* »ñÈ¡¸Ã½Ú¼ÙÈÕµÄ½ØÖÁÈÕÆÚ */
+			/* è·å–è¯¥èŠ‚å‡æ—¥çš„æˆªè‡³æ—¥æœŸ */
 			temp2[0] = result[14];
 			temp2[1] = result[15];
 
 			if (day >= atoi(temp1) && day <= atoi(temp2))
 			{
-				/* ÉèÖÃ×ÖÌåÑÕÉ«ÎªºìÉ« */
+				/* è®¾ç½®å­—ä½“é¢œè‰²ä¸ºçº¢è‰² */
 				SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), BACKGROUND_COLOR | FOREGROUND_RED);
 				return NULL;
 			}
@@ -247,14 +247,14 @@ char *ShowHolidays(int year, int month, int day)
 }
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-// ÏÔÊ¾Ã¿¸ö³õÒ»ÊÇÅ©ÀúµÄ¼¸ÔÂ,»òÕßÏÔÊ¾¶ÔÓ¦µÄÈò¼¸ÔÂ 
+// æ˜¾ç¤ºæ¯ä¸ªåˆä¸€æ˜¯å†œå†çš„å‡ æœˆ,æˆ–è€…æ˜¾ç¤ºå¯¹åº”çš„é—°å‡ æœˆ 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 char* ShowLunarMonth(int year, int month, int day, int leap_month)
 {
 	int i = 0;
-	int* date = GetSolarTermsDate(year, month);				// »ñÈ¡¸ÃÔÂµÄÁ½¸ö½ÚÆøÈÕÆÚ
+	int* date = GetSolarTermsDate(year, month);				// è·å–è¯¥æœˆçš„ä¸¤ä¸ªèŠ‚æ°”æ—¥æœŸ
 
-	/* »ñÈ¡µÚÒ»½ÚÆø¶ÔÓ¦Êı×éµÄÏÂ±ê,ÏÂ±ê¾Í´ú±í×ÅÅ©ÀúµÄ¼¸ÔÂ·İ */
+	/* è·å–ç¬¬ä¸€èŠ‚æ°”å¯¹åº”æ•°ç»„çš„ä¸‹æ ‡,ä¸‹æ ‡å°±ä»£è¡¨ç€å†œå†çš„å‡ æœˆä»½ */
 	for (i = 0; i < 48; i++)
 	{
 		//printf("%s\t%s\n", solarTermsName[(month - 1) * 2], solarTermsName[i]);
@@ -262,10 +262,10 @@ char* ShowLunarMonth(int year, int month, int day, int leap_month)
 			break;
 	}
 
-	i /= 2;													// ÒòÎªÒ»¸öÔÂÓĞÁ½¸ö½ÚÆø,ËùÒÔ³ıÒÔ2²ÅÊÇÅ©Àú¶ÔÓ¦µÄ¼¸ÔÂ·İ	
+	i /= 2;													// å› ä¸ºä¸€ä¸ªæœˆæœ‰ä¸¤ä¸ªèŠ‚æ°”,æ‰€ä»¥é™¤ä»¥2æ‰æ˜¯å†œå†å¯¹åº”çš„å‡ æœˆä»½	
 	if (i >= 11)
 		i = i - 11;
-	/* ³õÒ»ÔÚ¸ÃÔÂÁ½¸ö½ÚÆøÈÕÆÚÖ®ºó */
+	/* åˆä¸€åœ¨è¯¥æœˆä¸¤ä¸ªèŠ‚æ°”æ—¥æœŸä¹‹å */
 	if (day > date[1])
 	{
 		if (leap_month != 0 && i == leap_month)
@@ -273,11 +273,11 @@ char* ShowLunarMonth(int year, int month, int day, int leap_month)
 		else
 			return lunar_calendar_month[i + 1];
 	}
-	/* ³õÒ»ÔÚ¸ÃÔÂÁ½¸ö½ÚÆøÖ®Ç° */
+	/* åˆä¸€åœ¨è¯¥æœˆä¸¤ä¸ªèŠ‚æ°”ä¹‹å‰ */
 	else
 	{
 		if (leap_month != 0 && i == leap_month)
-			return lunar_calendar_month[11 + i];			// »ñÈ¡ÏÂÒ»¸öÅ©ÀúÔÂ·İÃû³Æ
+			return lunar_calendar_month[11 + i];			// è·å–ä¸‹ä¸€ä¸ªå†œå†æœˆä»½åç§°
 		else 
 			return lunar_calendar_month[i];
 	}
@@ -285,30 +285,30 @@ char* ShowLunarMonth(int year, int month, int day, int leap_month)
 
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-// ´òÓ¡µ¥ÔÂĞÅÏ¢ 
+// æ‰“å°å•æœˆä¿¡æ¯ 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 int PrintSingleMonthInfo(int year, int month)
 {
-	if (year > 2050 || year < 1900)							// Ö»ÏÔÊ¾1900-2500Ö®¼äµÄÄê·İĞÅÏ¢
+	if (year > 2050 || year < 1900)							// åªæ˜¾ç¤º1900-2500ä¹‹é—´çš„å¹´ä»½ä¿¡æ¯
 		return 1;
 	int i, j, k;
 	int count = 0, days;
 	char temp[2];
-	char* holiday = NULL;									// ´æ´¢½ÚÈÕÃû³Æ
-	char* solar_terms = NULL;								// ´æ´¢½ÚÆøÃû³Æ
-	char* lunar_month = NULL;								// ´æ´¢Ã¿ÔÂ³õÒ»ÊÇÅ©ÀúµÄ¼¸ÔÂ,»òÕßÊÇÈò¼¸ÔÂ
-	int freeDays = 0;										// µ±Ç°ÔÂ·İÍ·¿ÕÓàµÄÌìÊı
-	int firstDay = 0;										// ´Ó¸ÃÔÂµÄĞÇÆÚ¼¸ÊÇ1ºÅ
-	int lunarCalendarIndex = 0;								// ¹«ÀúµÄµÚÒ»ÌìÊÇÅ©Àú¼¸ºÅ
-	int currentDays = solarMonth[month - 1];				// »ñÈ¡¸ÃÔÂµÄ¹«ÀúÌìÊı
-	int fromStartDays = CalcFromStartDays(year, month);		// ¾àÀë1900ÄêµÄ×ÜÌìÊı
-	int leap_month = lunarCalendarInfo[year - 1900] & 0xF;	// ¸ÃÄêÓĞÊ²Ã´ÈòÔÂ, &0xF±íÊ¾È¡Ê®½øÖÆ¸öÎ»ÉÏµÄÊı
-	/* ¼ÆËã¸ÃÔÂµÄ1ºÅÊÇÅ©ÀúµÄ¼¸ºÅ,»ñµÃlunarCalendarÊı×éµÄÏÂ±ê */
+	char* holiday = NULL;									// å­˜å‚¨èŠ‚æ—¥åç§°
+	char* solar_terms = NULL;								// å­˜å‚¨èŠ‚æ°”åç§°
+	char* lunar_month = NULL;								// å­˜å‚¨æ¯æœˆåˆä¸€æ˜¯å†œå†çš„å‡ æœˆ,æˆ–è€…æ˜¯é—°å‡ æœˆ
+	int freeDays = 0;										// å½“å‰æœˆä»½å¤´ç©ºä½™çš„å¤©æ•°
+	int firstDay = 0;										// ä»è¯¥æœˆçš„æ˜ŸæœŸå‡ æ˜¯1å·
+	int lunarCalendarIndex = 0;								// å…¬å†çš„ç¬¬ä¸€å¤©æ˜¯å†œå†å‡ å·
+	int currentDays = solarMonth[month - 1];				// è·å–è¯¥æœˆçš„å…¬å†å¤©æ•°
+	int fromStartDays = CalcFromStartDays(year, month);		// è·ç¦»1900å¹´çš„æ€»å¤©æ•°
+	int leap_month = lunarCalendarInfo[year - 1900] & 0xF;	// è¯¥å¹´æœ‰ä»€ä¹ˆé—°æœˆ, &0xFè¡¨ç¤ºå–åè¿›åˆ¶ä¸ªä½ä¸Šçš„æ•°
+	/* è®¡ç®—è¯¥æœˆçš„1å·æ˜¯å†œå†çš„å‡ å·,è·å¾—lunarCalendaræ•°ç»„çš„ä¸‹æ ‡ */
 	temp[0] = lunarDate[year - 1900][(month - 1) * 2];
 	temp[1] = lunarDate[year - 1900][(month - 1) * 2 + 1];
 	lunarCalendarIndex = atoi(temp) - 1;
-	/* »ñµÃ¸ÃÔÂµÄÏÂÒ»ÔÂµÄ1ºÅÊÇÅ©ÀúÊ²Ã´ÈÕ×Ó */
-	if (month == 12)										// Èç¹û¸ÃÔÂÊÇ12Äê¾Í»ñÈ¡ÏÂÒ»ÄêµÄÔÂ·İ1ÔÂ·İ
+	/* è·å¾—è¯¥æœˆçš„ä¸‹ä¸€æœˆçš„1å·æ˜¯å†œå†ä»€ä¹ˆæ—¥å­ */
+	if (month == 12)										// å¦‚æœè¯¥æœˆæ˜¯12å¹´å°±è·å–ä¸‹ä¸€å¹´çš„æœˆä»½1æœˆä»½
 	{
 		i = year - 1900 + 1;
 		j = 0;
@@ -322,55 +322,55 @@ int PrintSingleMonthInfo(int year, int month)
 	temp[1] = lunarDate[i][j + 1];	
 	days = currentDays - atoi(temp) + 1;
 	
-	printf("\t%dÄê%dÔÂ\t\t\t\t\t      \n", year, month);
+	printf("\t%då¹´%dæœˆ\t\t\t\t\t      \n", year, month);
 	printf("\t-----------------------------------------------------\n");
-	/* ÉèÖÃ×ÖÌåÑÕÉ«Îª³ÈÉ« */
+	/* è®¾ç½®å­—ä½“é¢œè‰²ä¸ºæ©™è‰² */
 	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), BACKGROUND_COLOR | FOREGROUND_BLUE | FOREGROUND_RED);
-	printf("\tÒ»\t¶ş\tÈı\tËÄ\tÎå\tÁù\tÈÕ    \n");
-	/* ½«×ÖÌå»Ö¸´Îª°×µ×ºÚ×Ö */
+	printf("\tä¸€\täºŒ\tä¸‰\tå››\täº”\tå…­\tæ—¥    \n");
+	/* å°†å­—ä½“æ¢å¤ä¸ºç™½åº•é»‘å­— */
 	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), BACKGROUND_COLOR);
 	printf("\t-----------------------------------------------------\n\t");
 	freeDays = fromStartDays % 7;
 	firstDay = 7 - freeDays;
-	/* ÔÂ·İÍ·¿ÕÓàµÄÌìÊıÓÃ¿Õ¸ñ´úÌæ */
+	/* æœˆä»½å¤´ç©ºä½™çš„å¤©æ•°ç”¨ç©ºæ ¼ä»£æ›¿ */
 	for (i = 0; i < freeDays; i++)
 		printf("\t");
 	for (i = 1; i < currentDays + 1; i++)
 	{
 		int index = 1;
-		/* ÉèÖÃ×ÖÌåÑÕÉ«ÎªÀ¶É« */
+		/* è®¾ç½®å­—ä½“é¢œè‰²ä¸ºè“è‰² */
 		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), BACKGROUND_COLOR | FOREGROUND_BLUE);
 		ShowHiglightWeekend(year, month, i);
 		printf("%d\t", i);
 		count++;
 		if (i == firstDay || (i - firstDay) % 7 == 0 || i == currentDays)
 		{
-			printf("\n      ");	// »»ĞĞ
-			/* Ê×ÏÈÊä³öÒ»Ğ©¿Õ¸ñÒÔ±ãÔÚ¹«Àú¶ÔÓ¦µÄÈÕÆÚÏÂÏÔÊ¾Å©Àú */
+			printf("\n      ");	// æ¢è¡Œ
+			/* é¦–å…ˆè¾“å‡ºä¸€äº›ç©ºæ ¼ä»¥ä¾¿åœ¨å…¬å†å¯¹åº”çš„æ—¥æœŸä¸‹æ˜¾ç¤ºå†œå† */
 			if (i == firstDay)
 			{
 				for (j = 0; j < freeDays; j++)
 					printf("        ");
 			}
 //***********************************************************************************************
-// ´òÓ¡½Ú¼ÙÈÕĞÅÏ¢
+// æ‰“å°èŠ‚å‡æ—¥ä¿¡æ¯
 //***********************************************************************************************
-			/* ÉèÖÃ×ÖÌåÑÕÉ«ÎªÄ¬ÈÏµÄºÚÉ« */
+			/* è®¾ç½®å­—ä½“é¢œè‰²ä¸ºé»˜è®¤çš„é»‘è‰² */
 			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), BACKGROUND_COLOR);
 			for (j = 0; j < count; j++)
 			{
-				if ((i - (count - j)) == days)				// ÅĞ¶ÏÅ©ÀúÊÇ·ñµ½ÏÂÒ»¸öÔÂ·İÁË,Èç¹ûÊÇÔò´Ó³õÒ»¿ªÊ¼´òÓ¡
+				if ((i - (count - j)) == days)				// åˆ¤æ–­å†œå†æ˜¯å¦åˆ°ä¸‹ä¸€ä¸ªæœˆä»½äº†,å¦‚æœæ˜¯åˆ™ä»åˆä¸€å¼€å§‹æ‰“å°
 					lunarCalendarIndex = 0;
 
-				/* Èç¹ûµ±Ç°ÈÕÆÚÊÇ½Ú¼ÙÈÕ´òÓ¡½Ú¼ÙÈÕÃû³Æ²¢½«¼ÙÆÚÈÕÆÚ×ÖÌå±äÎªºìÉ« */
+				/* å¦‚æœå½“å‰æ—¥æœŸæ˜¯èŠ‚å‡æ—¥æ‰“å°èŠ‚å‡æ—¥åç§°å¹¶å°†å‡æœŸæ—¥æœŸå­—ä½“å˜ä¸ºçº¢è‰² */
 				holiday =  ShowHolidays(year, month, i - count + 1 + j);
 				if (holiday != NULL)
 				{				
 					
-					printf("%s", holiday);					// ÏÔÊ¾½ÚÈÕÃû³Æ
+					printf("%s", holiday);					// æ˜¾ç¤ºèŠ‚æ—¥åç§°
 					if ((strlen(holiday) / 2) >= 3)
 						printf(" ");
-					else if (strspn(holiday, "0123456789") == strlen(holiday))		// ÅĞ¶Ï½ÚÈÕÊÇ·ñÊÇÊı×Ö
+					else if (strspn(holiday, "0123456789") == strlen(holiday))		// åˆ¤æ–­èŠ‚æ—¥æ˜¯å¦æ˜¯æ•°å­—
 						for (k = 0; k < (strlen(holiday) * 2 - 1); k++)
 							printf(" ");
 					else 
@@ -378,36 +378,36 @@ int PrintSingleMonthInfo(int year, int month)
 							printf(" ");
 				}
 //***********************************************************************************************
-// ´òÓ¡½ÚÆøĞÅÏ¢
+// æ‰“å°èŠ‚æ°”ä¿¡æ¯
 //***********************************************************************************************
 				else if ((solar_terms = ShowSolarTerms(year, month, i - count + 1 + j)) != NULL)
 				{
-					/* ÉèÖÃ×ÖÌåÑÕÉ«ÎªÂÌÉ« */
+					/* è®¾ç½®å­—ä½“é¢œè‰²ä¸ºç»¿è‰² */
 					SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), BACKGROUND_COLOR | FOREGROUND_GREEN);
 					printf(" %s", solar_terms);
 					for (k = 0; k < (strlen(solar_terms) / 2); k++)
 						printf(" ");
 				}
 //***********************************************************************************************
-// ´òÓ¡Õı³£µÄÈÕÀúÈÕÆÚ
+// æ‰“å°æ­£å¸¸çš„æ—¥å†æ—¥æœŸ
 //***********************************************************************************************
 				else
 				{
-					if (!strcmp(lunarCalendar[lunarCalendarIndex], "³õÒ»"))			// »ñÈ¡³õÒ»ÊÇÅ©ÀúµÄ¼¸ÔÂ
+					if (!strcmp(lunarCalendar[lunarCalendarIndex], "åˆä¸€"))			// è·å–åˆä¸€æ˜¯å†œå†çš„å‡ æœˆ
 						lunar_month = ShowLunarMonth(year, month, i - count + 1 + j, leap_month);
 
 					if (lunar_month != NULL)
 					{
-						/* ÉèÖÃ×ÖÌåÑÕÉ«ÎªÂÌÉ« */
+						/* è®¾ç½®å­—ä½“é¢œè‰²ä¸ºç»¿è‰² */
 						SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), BACKGROUND_COLOR | FOREGROUND_GREEN);
-						printf(" %s   ", lunar_month);								// ´òÓ¡Å©Àú³õÒ»ÊÇ¼¸ÔÂ·İ
+						printf(" %s   ", lunar_month);								// æ‰“å°å†œå†åˆä¸€æ˜¯å‡ æœˆä»½
 					}
 					else 
 						printf(" %s   ", lunarCalendar[lunarCalendarIndex]);
 					lunar_month = NULL;
 				}
-				lunarCalendarIndex++;						// Å©ÀúÈÕÆÚ¼ÓÒ»
-				/* ÉèÖÃ×ÖÌåÑÕÉ«ÎªÄ¬ÈÏµÄºÚÉ« */	
+				lunarCalendarIndex++;						// å†œå†æ—¥æœŸåŠ ä¸€
+				/* è®¾ç½®å­—ä½“é¢œè‰²ä¸ºé»˜è®¤çš„é»‘è‰² */	
 				SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), BACKGROUND_COLOR);
 			}
 			count = 0;
@@ -420,13 +420,13 @@ int PrintSingleMonthInfo(int year, int month)
 
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-// ÏÔÊ¾ÈÕÀú
+// æ˜¾ç¤ºæ—¥å†
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 void ShowCalendar(int year, int month)
 {
-	// system("cls");							// ÇåÆÁ
-	SetLeapYearsOfDays(year);				// ÅĞ¶ÏÊÇ·ñÊÇÈòÄê,Èç¹ûÊÇÈòÄêÉèÖÃÎªÈòÄêµÄÌìÊı
-	if (month != 0)							// ÏÔÊ¾µ¥ÔÂĞÅÏ¢
+	// system("cls");							// æ¸…å±
+	SetLeapYearsOfDays(year);				// åˆ¤æ–­æ˜¯å¦æ˜¯é—°å¹´,å¦‚æœæ˜¯é—°å¹´è®¾ç½®ä¸ºé—°å¹´çš„å¤©æ•°
+	if (month != 0)							// æ˜¾ç¤ºå•æœˆä¿¡æ¯
 	{
 		PrintSingleMonthInfo(year, month);
 
@@ -435,12 +435,12 @@ void ShowCalendar(int year, int month)
 
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-// ÍòÄêÀúÖ÷º¯Êı
+// ä¸‡å¹´å†ä¸»å‡½æ•°
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 void PerpetualCalendar()
 {
-	system("color F0");						// ÉèÖÃÎª°×µ×ºÚ×Ö
-	struct tm tm_now = GetCurrentDate();	// »ñÈ¡µ±Ç°ÏµÍ³Ê±¼ä
+	system("color F0");						// è®¾ç½®ä¸ºç™½åº•é»‘å­—
+	struct tm tm_now = GetCurrentDate();	// è·å–å½“å‰ç³»ç»Ÿæ—¶é—´
 	ShowCalendar(2014, 9);			
-	// ShowCalendar(tm_now.tm_year, tm_now.tm_mon);			// ¸ù¾İÏµÍ³Ê±¼äÏÔÊ¾¶ÔÓ¦µÄÈÕÀúĞÅÏ¢,¸ù¾İĞèÒª¿ÉÒÔ½«×¢ÊÍÉ¾µôÖ´ĞĞ´Ë´úÂë
+	// ShowCalendar(tm_now.tm_year, tm_now.tm_mon);			// æ ¹æ®ç³»ç»Ÿæ—¶é—´æ˜¾ç¤ºå¯¹åº”çš„æ—¥å†ä¿¡æ¯,æ ¹æ®éœ€è¦å¯ä»¥å°†æ³¨é‡Šåˆ æ‰æ‰§è¡Œæ­¤ä»£ç 
 }
